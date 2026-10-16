@@ -1,4 +1,17 @@
-from agents import build_reader_agent, build_search_agent, writer_chain, critic_chain
+from .agents import build_reader_agent, build_search_agent, writer_chain, critic_chain
+
+def content_to_text(content) -> str:
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts = []
+        for block in content:
+            if isinstance(block, str):
+                parts.append(block)
+            elif isinstance(block, dict) and isinstance(block.get("text"), str):
+                parts.append(block["text"])
+        return "\n".join(parts)
+    return str(content)
 
 def run_research_pipeline(topic: str)-> dict:
     state = {}
@@ -13,7 +26,7 @@ def run_research_pipeline(topic: str)-> dict:
         "messages": [("user", f"Find recent, reliable and detailed information about: {topic}")]
     })
 
-    state["search_results"] = search_result["messages"][-1].content
+    state["search_results"] = content_to_text(search_result["messages"][-1].content)
 
     print("\n search result ", state['search_results'])
 
@@ -33,7 +46,7 @@ def run_research_pipeline(topic: str)-> dict:
         )]
     })
 
-    state['scraped_content'] = reader_result["messages"][-1].content
+    state['scraped_content'] = content_to_text(reader_result["messages"][-1].content)
 
     print("\nscraped content\n", state['scraped_content'])
 
